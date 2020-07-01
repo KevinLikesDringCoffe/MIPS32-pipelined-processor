@@ -4,6 +4,7 @@
 module regfile(
     input clk,
     input rst,
+    
     input [4:0] waddr,
     input [31:0] wdata,
     input we,
