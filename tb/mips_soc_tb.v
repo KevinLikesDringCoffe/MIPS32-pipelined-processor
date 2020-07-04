@@ -14,7 +14,7 @@ end
 initial begin
     rst = 1'b1;
     #195 rst = 1'b0;
-    #1000 $stop;
+    #5000 $stop;
 end
 mips_soc mips_soc_for_test(
     .clk(clk),

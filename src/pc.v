@@ -4,6 +4,10 @@
 module pc(
     input clk,
     input rst,
+    
+    input branch_taken,
+    input [31:0] branch_addr,
+    
     output reg ce,
     output reg [31:0] pc_addr
 );
@@ -21,7 +25,8 @@ always @ (posedge clk) begin
         pc_addr <= 32'h00000000;
     end
     else begin
-        pc_addr <= pc_addr + 32'h4;
+        if(branch_taken) pc_addr <= branch_addr;
+        else pc_addr <= pc_addr + 32'h4;
     end
 end
 
