@@ -4,16 +4,23 @@
 module regfile(
     input clk,
     input rst,
-    
     input [4:0] waddr,
     input [31:0] wdata,
     input we,
-    
+
+    input from_pc,
+    input [31:0] pc_addr,
+
     input [4:0] raddr1,
     output reg [31:0] rdata1,
     
     input  [4:0] raddr2,
-    output reg [31:0] rdata2
+    output reg [31:0] rdata2,
+
+    input match_1,
+    input match_2,
+    input [31:0] match_data1,
+    input [31:0] match_data2
 );
 
 reg [31:0] regs [31:0];
@@ -33,7 +40,10 @@ always @ (negedge clk) begin
 end
 
 always @ (*) begin
-    if(raddr1 == 5'h0) begin
+    if(match_1 == 1) begin
+        rdata1 <= match_data1;
+    end
+    else if(raddr1 == 5'h0) begin
         rdata1 <= 32'h00000000;
     end
     else begin
@@ -42,7 +52,10 @@ always @ (*) begin
 end
 
 always @ (*) begin
-    if(raddr2 == 5'h0) begin
+    if(match_2 == 1) begin
+        rdata2 <= match_data2;
+    end
+    else if(raddr2 == 5'h0) begin
         rdata2 <= 32'h00000000;
     end
     else begin

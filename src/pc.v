@@ -4,6 +4,7 @@
 module pc(
     input clk,
     input rst,
+    input to_pc,
     output reg ce,
     output reg [31:0] pc_addr
 );

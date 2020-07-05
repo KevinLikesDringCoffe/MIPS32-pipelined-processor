@@ -1,0 +1,15 @@
+decode.v
+definations.vh
+ex_mem.v
+exu.v
+id_ex.v
+if_id.v
+instr_rom.v
+mem_wb.v
+mips_soc.v
+mips_top.v
+pc.v
+regfile.v
+../tb/mips_soc_tb.v
+
+//iverilog -o test.vvp decode.v definations.vh ex_mem.v exu.v id_ex.v if_id.v instr_rom.v mem_wb.v mips_soc.v mips_top.v pc.v regfile.v harzard.v ../tb/mips_soc_tb.v

@@ -12,9 +12,14 @@ initial begin
 end
 
 initial begin
+    $dumpfile("test.vcd");  
+    $dumpvars(0, mips_soc_for_test);   
+end
+
+initial begin
     rst = 1'b1;
     #195 rst = 1'b0;
-    #1000 $stop;
+    #3000 $stop;
 end
 mips_soc mips_soc_for_test(
     .clk(clk),
