@@ -7,7 +7,7 @@ module exu(
     input [31:0] rdata2,
     input [31:0] ext_imm,
     input [4:0] sa,
-    input [1:0] alu_src,
+    input [2:0] alu_src,
     input [31:0] pc,
     
     output reg [31:0] result

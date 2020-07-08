@@ -17,8 +17,10 @@ module decode(
     output reg [4:0] waddr,
     output reg reg_wr,
     output reg mem_wr,
+    output reg mem_rd,
+    output reg [2:0] mem_opcode,
     output reg [1:0] reg_wb_src,
-    output reg [1:0] alu_src,
+    output reg [2:0] alu_src,
     
     output reg branch_taken,
     output reg [31:0] branch_addr,
@@ -32,6 +34,7 @@ always @ (*) begin
         `op_ori: begin
            reg_wr <= 1'b1;
            mem_wr <= 1'b0;
+           mem_rd <= 1'b0;
            waddr <= instr[`i_rt];
            raddr1 <= instr[`i_rs];
            raddr2 <= instr[`i_rt];
@@ -46,6 +49,7 @@ always @ (*) begin
         `op_andi: begin
            reg_wr <= 1'b1;
            mem_wr <= 1'b0;
+           mem_rd <= 1'b0;
            waddr <= instr[`i_rt];
            raddr1 <= instr[`i_rs];
            raddr2 <= instr[`i_rt];
@@ -60,6 +64,7 @@ always @ (*) begin
         `op_xori: begin
            reg_wr <= 1'b1;
            mem_wr <= 1'b0;
+           mem_rd <= 1'b0;
            waddr <= instr[`i_rt];
            raddr1 <= instr[`i_rs];
            raddr2 <= instr[`i_rt];
@@ -74,6 +79,7 @@ always @ (*) begin
         `op_lui: begin
            reg_wr <= 1'b1;
            mem_wr <= 1'b0;
+           mem_rd <= 1'b0;
            waddr <= instr[`i_rt];
            raddr1 <= 5'b0;
            raddr2 <= instr[`i_rt];
@@ -85,9 +91,25 @@ always @ (*) begin
            branch_taken <= 1'b0;
            flush <= 1'b0;
         end
+        `op_addiu: begin
+           reg_wr <= 1'b1;
+           mem_wr <= 1'b0;
+           mem_rd <= 1'b0;
+           waddr <= instr[`i_rt];
+           raddr1 <= instr[`i_rs];
+           raddr2 <= instr[`i_rt];
+           ext_imm <= {{16{instr[15]}},instr[`i_immediate]};
+           sa <= 5'b0;
+           aluop <= `aluop_add;
+           reg_wb_src <= `wb_src_alu_result;
+           alu_src <= `alu_src_imm;
+           branch_taken <= 1'b0;
+           flush <= 1'b0;
+        end
         `op_j : begin
             reg_wr <= 1'b0;
             mem_wr <= 1'b0;
+            mem_rd <= 1'b0;
             waddr <= instr[`r_rd];
             raddr1 <= instr[`r_rs];
             raddr2 <= instr[`r_rt];
@@ -103,6 +125,7 @@ always @ (*) begin
         `op_jal : begin
             reg_wr <= 1'b1;
             mem_wr <= 1'b0;
+            mem_rd <= 1'b0;
             waddr <= instr[`r_rd];
             raddr1 <= instr[`r_rs];
             raddr2 <= instr[`r_rt];
@@ -118,6 +141,7 @@ always @ (*) begin
         `op_beq: begin
             reg_wr <= 1'b0;
             mem_wr <= 1'b0;
+            mem_rd <= 1'b0;
             waddr <= instr[`i_rt];
             raddr1 <= instr[`i_rs];
             raddr2 <= instr[`r_rt];
@@ -133,6 +157,7 @@ always @ (*) begin
         `op_bne : begin
             reg_wr <= 1'b0;
             mem_wr <= 1'b0;
+            mem_rd <= 1'b0;
             waddr <= instr[`i_rt];
             raddr1 <= instr[`i_rs];
             raddr2 <= instr[`r_rt];
@@ -148,6 +173,7 @@ always @ (*) begin
         `op_bgtz: begin
             reg_wr <= 1'b0;
             mem_wr <= 1'b0;
+            mem_rd <= 1'b0;
             waddr <= instr[`i_rt];
             raddr1 <= instr[`i_rs];
             raddr2 <= instr[`r_rt];
@@ -163,6 +189,7 @@ always @ (*) begin
         `op_bgtz: begin
             reg_wr <= 1'b0;
             mem_wr <= 1'b0;
+            mem_rd <= 1'b0;
             waddr <= instr[`i_rt];
             raddr1 <= instr[`i_rs];
             raddr2 <= instr[`r_rt];
@@ -180,6 +207,7 @@ always @ (*) begin
                 `rt_bltz: begin
                     reg_wr <= 1'b0;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -195,6 +223,7 @@ always @ (*) begin
                 `rt_bltzal: begin
                     reg_wr <= 1'b1;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= 5'b11111;
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -210,6 +239,7 @@ always @ (*) begin
                 `rt_bgez: begin
                     reg_wr <= 1'b0;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -225,6 +255,7 @@ always @ (*) begin
                 `rt_bgezal: begin
                     reg_wr <= 1'b1;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= 5'b11111;
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -238,12 +269,78 @@ always @ (*) begin
                     flush <= rdata1[31];
                 end 
             endcase
+ 
         end
+        `op_lb: begin
+            reg_wr <= 1'b1;
+            mem_wr <= 1'b0;
+            mem_rd <= 1'b1;
+            mem_opcode <= `mem_op_b;
+            waddr <= instr[`i_rt];
+            raddr1 <= instr[`i_rs];
+            raddr2 <= instr[`r_rd];
+            ext_imm <= {{16{instr[15]}},instr[`i_immediate]};
+            sa <= instr[`r_sa];
+            aluop <= `aluop_add;
+            reg_wb_src <= `wb_src_mem;
+            alu_src <= `alu_src_imm;
+            branch_taken <= 1'b0;
+            flush <= 1'b0; 
+         end
+         `op_lbu: begin
+            reg_wr <= 1'b1;
+            mem_wr <= 1'b0;
+            mem_rd <= 1'b1;
+            mem_opcode <= `mem_op_bu;
+            waddr <= instr[`i_rt];
+            raddr1 <= instr[`i_rs];
+            raddr2 <= instr[`r_rd];
+            ext_imm <= {{16{instr[15]}},instr[`i_immediate]};
+            sa <= instr[`r_sa];
+            aluop <= `aluop_add;
+            reg_wb_src <= `wb_src_mem;
+            alu_src <= `alu_src_imm;
+            branch_taken <= 1'b0;
+            flush <= 1'b0; 
+         end
+         `op_lw: begin
+            reg_wr <= 1'b1;
+            mem_wr <= 1'b0;
+            mem_rd <= 1'b1;
+            mem_opcode <= `mem_op_w;
+            waddr <= instr[`i_rt];
+            raddr1 <= instr[`i_rs];
+            raddr2 <= instr[`r_rd];
+            ext_imm <= {{16{instr[15]}},instr[`i_immediate]};
+            sa <= instr[`r_sa];
+            aluop <= `aluop_add;
+            reg_wb_src <= `wb_src_mem;
+            alu_src <= `alu_src_imm;
+            branch_taken <= 1'b0;
+            flush <= 1'b0; 
+         end
+         `op_sw: begin
+            reg_wr <= 1'b0;
+            mem_wr <= 1'b1;
+            mem_rd <= 1'b0;
+            mem_opcode <= `mem_op_w;
+            waddr <= instr[`i_rt];
+            raddr1 <= instr[`i_rs];
+            raddr2 <= instr[`i_rt];
+            ext_imm <= {{16{instr[15]}},instr[`i_immediate]};
+            sa <= instr[`r_sa];
+            aluop <= `aluop_add;
+            reg_wb_src <= `wb_src_mem;
+            alu_src <= `alu_src_imm;
+            branch_taken <= 1'b0;
+            flush <= 1'b0; 
+         end
         `op_special: begin
             case(instr[`r_funct])
                 `funct_and: begin
                     reg_wr <= 1'b1;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -258,6 +355,7 @@ always @ (*) begin
                 `funct_or: begin
                     reg_wr <= 1'b1;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -272,6 +370,7 @@ always @ (*) begin
                 `funct_xor: begin
                     reg_wr <= 1'b1;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -286,6 +385,7 @@ always @ (*) begin
                 `funct_nor: begin
                     reg_wr <= 1'b1;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -300,6 +400,7 @@ always @ (*) begin
                 `funct_sll: begin
                     reg_wr <= 1'b1;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -314,6 +415,7 @@ always @ (*) begin
                 `funct_srl: begin
                     reg_wr <= 1'b1;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -328,6 +430,7 @@ always @ (*) begin
                 `funct_sra: begin
                     reg_wr <= 1'b1;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -342,6 +445,7 @@ always @ (*) begin
                 `funct_sllv: begin
                     reg_wr <= 1'b1;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -356,6 +460,7 @@ always @ (*) begin
                 `funct_srlv: begin
                     reg_wr <= 1'b1;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -370,6 +475,7 @@ always @ (*) begin
                 `funct_srav: begin
                     reg_wr <= 1'b1;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -384,6 +490,7 @@ always @ (*) begin
                 `funct_movn: begin
                     reg_wr <= (rdata2 != 32'b0);
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -398,6 +505,7 @@ always @ (*) begin
                 `funct_movz: begin
                     reg_wr <= (rdata2 == 32'b0);
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -412,6 +520,7 @@ always @ (*) begin
                 `funct_jr: begin
                     reg_wr <= 1'b0;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -428,6 +537,7 @@ always @ (*) begin
                 `funct_jalr: begin
                     reg_wr <= 1'b1;
                     mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
                     waddr <= instr[`r_rd];
                     raddr1 <= instr[`r_rs];
                     raddr2 <= instr[`r_rt];
@@ -439,13 +549,43 @@ always @ (*) begin
                     branch_taken <= 1'b1;
                     branch_addr <= rdata1;
                     flush <= 1'b1;
-                    
+                end
+                `funct_addu: begin
+                    reg_wr <= 1'b1;
+                    mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
+                    waddr <= instr[`r_rd];
+                    raddr1 <= instr[`r_rs];
+                    raddr2 <= instr[`r_rt];
+                    ext_imm <= 32'b0;
+                    sa <= 5'b0;
+                    aluop <= `aluop_add;
+                    reg_wb_src <= `wb_src_alu_result;
+                    alu_src <= `alu_src_rt;
+                    branch_taken <= 1'b0;
+                    flush <= 1'b0;
+                end
+                `funct_subu: begin
+                    reg_wr <= 1'b1;
+                    mem_wr <= 1'b0;
+                    mem_rd <= 1'b0;
+                    waddr <= instr[`r_rd];
+                    raddr1 <= instr[`r_rs];
+                    raddr2 <= instr[`r_rt];
+                    ext_imm <= 32'b0;
+                    sa <= 5'b0;
+                    aluop <= `aluop_sub;
+                    reg_wb_src <= `wb_src_alu_result;
+                    alu_src <= `alu_src_rt;
+                    branch_taken <= 1'b0;
+                    flush <= 1'b0;
                 end
             endcase 
         end
         default: begin
             reg_wr <= 1'b0;
             mem_wr <= 1'b0;
+            mem_rd <= 1'b0;
             waddr <= 5'h0;
             raddr1 <= 5'h0;
             raddr2 <= 5'h0;
