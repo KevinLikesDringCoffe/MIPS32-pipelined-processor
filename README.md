@@ -46,3 +46,22 @@ A MIPS32 pipelined processor impelmented by Verilog HDL
 - bgezal
 - b instruction can be operated as beq r0,offset
 - bal instruction can be operated as bgezal r0,offset
+## Version 1.2.200708
+### Newly added functional unit
+- Data ram
+- Memory stage ram interface
+### Newly added instructions
+- addu
+- subu
+- lb
+- lbu
+- lh
+- lhu
+- lw
+- lwl
+- lwr
+- sb
+- sh
+- sw
+- swl
+- swr
