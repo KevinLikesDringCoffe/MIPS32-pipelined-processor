@@ -65,3 +65,5 @@ A MIPS32 pipelined processor impelmented by Verilog HDL
 - sw
 - swl
 - swr
+# Features
+A five stage pipeline which contains fetch, decode, execution, memory and writeback stages. The branch delay slot is removed in this implementation. The branch is detected at decode stage. Data hazard is resolve by forwarding register value from EX and MEM stage to the ID stage.
